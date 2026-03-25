@@ -5,6 +5,8 @@ import CandidateProfile from '@/lib/models/CandidateProfile'
 import User from '@/lib/models/User'
 import PDFDocument from 'pdfkit'
 
+export const dynamic = 'force-dynamic'
+
 // ── Layout constants (Letter, 0.5in margins) ──────────────────────────────────
 const ML = 36          // left/right margin  (0.5 in)
 const MT = 32          // top margin         (~0.45 in)
