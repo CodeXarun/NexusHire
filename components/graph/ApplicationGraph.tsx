@@ -225,7 +225,7 @@ export function ApplicationGraph({
   }, [])
 
   const handleClick = useCallback((node: Record<string, unknown>) =>
-    onNodeClick?.(node as GraphNode), [onNodeClick])
+    onNodeClick?.(node as unknown as GraphNode), [onNodeClick])
 
   return (
     <div
