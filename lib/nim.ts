@@ -1,16 +1,27 @@
 import OpenAI from 'openai'
 
-const nimClient = new OpenAI({
-  apiKey: process.env.NVIDIA_NIM_API_KEY,
-  baseURL: 'https://integrate.api.nvidia.com/v1',
-})
+let nimClient: OpenAI | null = null
+
+function getNimClient(): OpenAI {
+  if (!nimClient) {
+    const apiKey = process.env.NVIDIA_NIM_API_KEY || process.env.OPENAI_API_KEY
+    if (!apiKey) {
+      console.warn('NIM API key not configured, embeddings will return zeros')
+    }
+    nimClient = new OpenAI({
+      apiKey: apiKey || 'dummy-key',
+      baseURL: 'https://integrate.api.nvidia.com/v1',
+    })
+  }
+  return nimClient
+}
 
 const EMBED_MODEL = 'nvidia/llama-nemotron-embed-1b-v2'
 const EMBED_DIMS = 768
 
 export async function generateEmbedding(text: string, inputType: 'passage' | 'query' = 'passage'): Promise<number[]> {
   try {
-    const response = await nimClient.embeddings.create({
+    const response = await getNimClient().embeddings.create({
       model: EMBED_MODEL,
       input: text.slice(0, 8000), // NIM has input length limits
       // @ts-expect-error: NIM requires input_type for asymmetric models
