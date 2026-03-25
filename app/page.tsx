@@ -161,7 +161,7 @@ export default function LandingPage() {
       <footer className="border-t border-white/10 py-10">
         <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <span className="text-sm font-bold gradient-text">NexusHire</span>
-          <p className="text-xs text-muted-foreground">© 2026 NexusHire. Built for the hackathon.</p>
+          <p className="text-xs text-muted-foreground">© 2026 NexusHire. Built by Team Ace of Roots.</p>
         </div>
       </footer>
     </div>
