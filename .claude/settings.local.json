@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.\\(txt|yml|yaml|env|cfg|ini|toml\\)$\")",
+      "Bash(find D:/JobPortal/nexushire/job_portal_ai -name requirements*.txt -o -name Pipfile)",
+      "Bash(find /d/JobPortal/nexushire/app /d/JobPortal/nexushire/components -type f \\\\\\(-name *.tsx -o -name *.ts -o -name *.jsx -o -name *.js \\\\\\))",
+      "Bash(find /d/JobPortal/nexushire/components -type f -name *.tsx -o -name *.ts)",
+      "Bash(npm install:*)",
+      "Bash(grep -n \"OpportunityGraph\\\\|ApplicationGraph\" D:/JobPortal/nexushire/app/candidate/opportunity-graph/page.tsx D:/JobPortal/nexushire/app/recruiter/jobs/[id]/graph/page.tsx)",
+      "Bash(find D:JobPortalnexushiremock-interviewer-app -name .env* -o -name config*)",
+      "Bash(find D:JobPortalnexushireapp -path *interview* -o -path *api* -type f)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx|js\\)$\")",
+      "Bash(npx tsc:*)",
+      "Bash(grep -n description D:/JobPortal/nexushire/app/api/jobs/[id]/route.ts)"
+    ]
+  }
+}

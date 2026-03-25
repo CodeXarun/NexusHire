@@ -1,0 +1,1114 @@
+
+NexusHire
+Product Requirements Document
+The Transparent Opportunity Graph
+
+
+Field
+Details
+Version
+1.0 — Hackathon Edition
+Document Type
+Full PRD with Implementation Plan
+Hackathon Category
+Web / App Development
+Problem Statement
+PS3 — Job Portal Website
+Team Size
+4 Engineers
+Target Timeline
+24 Hours
+Date
+Mon Mar 23 2026
+
+
+Table of Contents
+
+
+1.  Executive Summary	3
+2.  Problem Statement Analysis	4
+3.  Target Users & Personas	5
+4.  Solution Overview	6
+5.  Complete Tech Stack	7
+6.  System Architecture	9
+7.  Database Schema	10
+8.  Complete Feature List	12
+9.  API Routes Reference	16
+10.  Phase-by-Phase Implementation Plan	18
+11.  Team Role Split	26
+12.  Risk Register	27
+13.  Demo Script	28
+
+
+1. Executive Summary
+
+
+NexusHire is a graph-first, AI-powered job portal that transforms hiring from a one-directional application pipeline into a transparent, bidirectional relationship network. Unlike LinkedIn, Naukri, or any existing ATS, NexusHire makes the compatibility graph visible to both sides — candidates see exactly why they matched or failed, recruiters see applicants as a live visual graph rather than an endless spreadsheet.
+
+The platform is built for a 24-hour hackathon by a team of 4, using a 100% free (or credit-covered) tech stack accessible from India. It directly addresses all four PS3 deliverables plus all three brownie point requirements.
+
+Metric
+Value
+Total Features
+37 across 7 modules
+Core (must-ship) Features
+24
+Bonus Features
+10
+Wow / Pitch Moment Features
+3
+PS Deliverables Covered
+4 / 4 (100%)
+Brownie Points Covered
+3 / 3 (100%)
+Estimated Lines of Code
+~3,500 LOC
+External APIs Used
+2 (Groq + NVIDIA NIM — both free)
+Monthly Infra Cost
+~$0–$30 (covered by credits)
+
+
+2. Problem Statement Analysis
+
+
+2.1  Core Problems Identified
+The modern hiring ecosystem has two root failures that compound each other:
+
+Discovery Failure: Candidates cannot find jobs that genuinely match their profile. Search is keyword-based, not semantic. Relevant opportunities are invisible.
+Trust Failure: Applications vanish into a black hole. 80% of candidates never hear back. Both sides have learned to expect nothing, so both sides stop investing in the process.
+
+2.2  PS3 Deliverables Mapping
+PS Deliverable
+Root Problem It Solves
+NexusHire Solution
+Opportunity Registry
+Jobs are free-text blobs — machines cannot reason about them
+AI decomposes JD into structured JSON entity with typed skills, weights, and experience ranges
+Application Graph Engine
+Recruiters drown in undifferentiated lists
+D3.js force-directed graph — applicants are nodes sized by match score, clustered by skill overlap
+Adaptive Search Layer
+Keyword search misses semantically equivalent skills
+NVIDIA NIM embeddings + MongoDB Atlas Vector Search — natural language semantic job discovery
+Application Visibility Module
+Candidates have zero visibility post-application
+Real-time 6-stage pipeline tracker with percentile rank — ends the black hole completely
+
+2.3  Brownie Points Coverage
+Brownie Point Requirement
+Implementation
+Resume matching with relevant jobs
+Groq Llama 3.1 8B parses resume → NVIDIA NIM generates embeddings → Atlas Vector Search finds top matched jobs on login
+Auto-ranking candidates for recruiters
+Match scores computed on apply via Groq → candidates ranked in graph + table view automatically
+AI interview simulator with feedback
+Groq Llama 3.3 70B role-plays as interviewer for a chosen job, evaluates answers, generates structured feedback report
+
+
+3. Target Users & Personas
+
+
+3.1  Persona A — The Job Seeker
+Attribute
+Detail
+Name
+Priya Sharma
+Role
+Software Engineer, 2 years experience
+Frustration
+Applied to 60 jobs in 2 months. Heard back from 3. Has no idea why she's being rejected — no feedback, no status updates.
+Goal
+Find roles she's genuinely qualified for, understand where she stands, improve her profile based on real feedback.
+What NexusHire gives her
+Match score before applying, real-time pipeline tracking, per-skill gap analysis on rejection, AI interview practice.
+
+3.2  Persona B — The Recruiter
+Attribute
+Detail
+Name
+Arjun Mehta
+Role
+Talent Acquisition Lead at a 200-person startup
+Frustration
+Reviews 300 applications per open role. 70% are completely irrelevant. Can't quickly identify real top candidates. Spends 40% of his week on screening.
+Goal
+Instantly surface the best-matched candidates, understand why they match, move fast.
+What NexusHire gives him
+Live applicant graph with nodes sized by score, click-to-inspect compatibility radar, AI-generated match explanation, Kanban pipeline.
+
+
+4. Solution Overview
+
+
+NexusHire is built on one central architectural insight:
+
+Core Insight
+Every application is not a form submission — it is an edge in a live, bidirectional graph between a candidate node and a job node, with an explainable compatibility score as its weight. Both nodes can see the edge and understand why it exists.
+
+This is what the PS means by 'Application Graph Engine' and 'connected opportunity graph.' No existing platform makes this graph visible to both sides. NexusHire does.
+
+4.1  Key Differentiators
+Bidirectional score visibility: Both candidate and recruiter see the same compatibility score with the same explanation. No opacity.
+Graph as primary UI: The recruiter's default view is a D3.js force-directed graph, not a list. Spatial position and node size encode match quality instantly.
+Rejection with direction: Candidates receive a specific skill gap analysis and a Groq-generated learning path on every rejection — not a form letter.
+Real-time pipeline transparency: Candidates track application status like a package. Firestore — replaced by MongoDB Change Streams + Pusher — keeps both sides in sync instantly.
+No black hole: The pipeline tracker shows current stage, days elapsed, and percentile rank among all applicants — at all times.
+
+
+5. Complete Tech Stack
+
+
+5.1  Frontend Layer
+Tool
+Purpose
+Version
+Cost
+Next.js
+Full-stack framework (App Router)
+14+
+Free
+TypeScript
+Type safety across frontend & API
+v5
+Free
+Tailwind CSS
+Utility-first styling
+v3
+Free
+shadcn/ui
+Pre-built accessible components
+Latest
+Free
+D3.js
+Force-directed applicant graph
+v7
+Free
+Chart.js
+Radar chart, bar charts, progress rings
+v4
+Free
+React Hook Form
+Form state management
+v7
+Free
+Zod
+Schema validation (forms + API)
+v3
+Free
+
+5.2  Backend / API Layer
+Tool
+Purpose
+Version
+Cost
+Next.js API Routes
+Serverless REST endpoints — no separate server needed
+14+
+Free
+Auth.js (NextAuth v5)
+Email + Google OAuth — self-hosted, no third-party auth service
+v5 beta
+Free
+Mongoose
+MongoDB ODM for schema definition and queries
+v8
+Free
+bcryptjs
+Password hashing for email auth
+v2
+Free
+jose
+JWT signing/verification for session tokens
+v5
+Free
+multer / formidable
+Resume PDF upload handling in API routes
+Latest
+Free
+AWS SDK v3 (S3 client)
+Resume upload to S3 bucket
+v3
+Free
+
+5.3  Database & Storage Layer
+Tool
+Purpose
+Plan / Tier
+Cost
+MongoDB Atlas
+Primary database — all collections
+Flex tier ($50 credits)
+~$0–30/mo
+MongoDB Atlas Vector Search
+Semantic job-candidate matching via embeddings
+Included in Flex
+Free
+MongoDB Change Streams
+Detect DB changes to trigger Pusher events
+Included in Atlas
+Free
+AWS S3
+Resume PDF file storage
+Free tier: 5GB / 20k GETs
+Free
+
+5.4  Real-Time Layer
+Tool
+Purpose
+Plan
+Cost
+Pusher
+WebSocket real-time updates (pipeline stage changes)
+Sandbox: 200k msg/day, 100 concurrent
+Free
+Pusher JS client
+Frontend subscription to channels
+v8
+Free
+Pusher server SDK (Node)
+Trigger events from API routes on DB change
+Latest
+Free
+
+5.5  AI Layer — Text Generation (Groq)
+Why Groq?
+Groq runs LLM inference on custom LPU hardware — significantly faster than GPU-based APIs. Free tier gives 14,400 requests/day on Llama 3.1 8B and 1,000 requests/day on Llama 3.3 70B. No credit card required. Fully accessible from India. Sign up at console.groq.com.
+
+Model
+Used For (AI Tasks)
+Free Limits
+Cost
+llama-3.1-8b-instant
+Resume parsing (Task 1), JD decomposition (Task 3), compatibility scoring (Task 6), resume improvement tips (Task 9)
+14,400 req/day, 30 RPM
+Free
+llama-3.3-70b-versatile
+Match explainability (Task 7), skill gap learning path (Task 8), interview question generation (Task 10), answer evaluation (Task 11), interview feedback report (Task 12)
+1,000 req/day, 30 RPM
+Free
+Groq Node SDK
+OpenAI-compatible SDK — just change base URL and model name. Drop-in replacement.
+—
+Free
+
+5.6  AI Layer — Embeddings (NVIDIA NIM)
+Why NVIDIA NIM for Embeddings?
+NVIDIA NIM free endpoint tier (build.nvidia.com) gives access to 94 models at no cost — just a Google account needed, no credit card. Using NIM for embeddings keeps the Groq generation quota fully free for text tasks. Sign up at build.nvidia.com with your Google account.
+
+Model
+Used For (AI Tasks)
+Free Limits
+Cost
+llama-nemotron-embed-1b-v2
+Candidate profile embedding (Task 2), job entity embedding (Task 4), search query embedding (Task 5) — generates vectors stored in MongoDB for Atlas Vector Search
+40 RPM, no daily cap
+Free
+NVIDIA Developer Program
+API key issuance — sign up at build.nvidia.com, no credit card
+—
+Free
+
+5.7  AI Task Assignment Summary
+#
+Task
+API
+Model
+Volume
+1
+Resume parsing
+Groq
+llama-3.1-8b-instant
+1 per candidate signup
+2
+Candidate embedding
+NVIDIA NIM
+llama-nemotron-embed-1b-v2
+1 per profile create/update
+3
+JD decomposition
+Groq
+llama-3.1-8b-instant
+1 per job post
+4
+Job embedding
+NVIDIA NIM
+llama-nemotron-embed-1b-v2
+1 per job post
+5
+Search query embedding
+NVIDIA NIM
+llama-nemotron-embed-1b-v2
+1 per search query
+6
+Compatibility scoring
+Groq
+llama-3.1-8b-instant
+1 per application
+7
+Match explainability
+Groq
+llama-3.3-70b-versatile
+1 per application
+8
+Skill gap learning path
+Groq
+llama-3.3-70b-versatile
+1 per rejection
+9
+Resume improvement tips
+Groq
+llama-3.1-8b-instant
+1 per resume upload
+10
+Interview question gen
+Groq
+llama-3.3-70b-versatile
+5 per session
+11
+Answer evaluation
+Groq
+llama-3.3-70b-versatile
+5 per session
+12
+Interview feedback report
+Groq
+llama-3.3-70b-versatile
+1 per session
+
+Daily Budget Check for Hackathon Demo
+Seeding 40 candidates + 10 jobs + scoring all combinations uses ~570 Groq calls total. The free tier gives 14,400/day on Llama 8B and 1,000/day on Llama 70B. Even with 10x testing overhead you will not hit any rate limit. Zero training required — both models are production-grade hosted APIs.
+
+5.8  DevOps & Deployment
+Tool
+Purpose
+Plan
+Cost
+Vercel
+Next.js hosting with auto-deploy from GitHub
+Hobby plan
+Free
+GitHub
+Version control + Vercel CI/CD integration
+Free tier
+Free
+Vercel Environment Variables
+Secrets management (API keys, DB URI, Pusher keys)
+Built-in
+Free
+
+Total Infra Cost
+~$0–$30/month covered entirely by your existing $50 MongoDB Atlas credits. All other services are permanently free. Two AI accounts needed: Groq (console.groq.com) and NVIDIA NIM (build.nvidia.com) — both require only a Google/email account, no credit card.
+
+
+6. System Architecture
+
+
+6.1  Request Flow — Candidate Applies to a Job
+Candidate submits application from Next.js frontend
+POST /api/applications API route is called
+API fetches candidate embedding + job embedding from MongoDB
+Cosine similarity computed in Atlas Vector Search (or server-side JS fallback)
+Groq Llama 3.1 8B called with candidate profile JSON + job entity JSON — returns match score object with overall score, skill breakdown, and explainability text
+Application document created in MongoDB with score, breakdown, and stage = 'applied'
+Response sent to frontend immediately — candidate sees match score breakdown
+
+6.2  Request Flow — Recruiter Moves Candidate to New Stage
+Recruiter drags candidate card in Kanban board (or clicks in graph sidebar)
+PATCH /api/applications/:id API route updates the stage field in MongoDB
+MongoDB Change Stream detects the update
+Server-side Pusher client triggers event on channel: job-{jobId}
+Candidate's browser (subscribed to application-{applicationId} channel) receives the push
+React state updates, pipeline tracker re-renders — zero page refresh
+
+6.3  Semantic Search Flow
+Candidate types natural language query: 'backend engineer with Node'
+GET /api/jobs/search?q=... — API calls NVIDIA NIM (llama-nemotron-embed-1b-v2) to embed the query string into a 768-dim vector
+MongoDB Atlas Vector Search $vectorSearch aggregation finds top-K closest job embeddings
+Results sorted by vector similarity score, filtered by active status
+Each result includes the candidate's precomputed match score for that job
+Frontend renders ranked job cards with match percentage badges
+
+
+7. Database Schema
+
+
+7.1  MongoDB Collections Overview
+Collection
+Documents Contain
+Key Fields
+users
+Both candidate and recruiter accounts
+_id, email, role ('candidate'|'recruiter'), passwordHash, createdAt
+candidateProfiles
+Structured candidate profiles parsed from resume
+userId, skills[], experience[], education[], embedding[768], profileStrength, resumeS3Key
+companyProfiles
+Recruiter company info
+userId, companyName, industry, size, website
+jobs
+Structured job entities (AI-decomposed)
+recruiterId, title, requiredSkills[], experienceRange, roleLevel, cultureTags[], embedding[768], status, createdAt
+applications
+Each candidate-job application edge
+candidateId, jobId, stage, matchScore{}, breakdown{}, appliedAt, stageHistory[], recruiterNotes
+interviewSessions
+AI interview practice sessions
+candidateId, jobId, messages[], feedbackReport{}, completedAt
+
+7.2  Key Document Structures
+jobs collection — single document
+jobs document structure
+{
+  _id: ObjectId,
+  recruiterId: ObjectId,
+  title: "Senior Backend Engineer",
+  description: "Raw JD text from recruiter",
+  requiredSkills: [
+    { skill: "Node.js", weight: 3, type: "technical" },
+    { skill: "MongoDB", weight: 2, type: "technical" },
+    { skill: "System Design", weight: 3, type: "technical" },
+    { skill: "Communication", weight: 1, type: "soft" }
+  ],
+  experienceRange: { min: 3, max: 6 },
+  roleLevel: "senior",
+  cultureTags: ["remote-first", "fast-paced"],
+  salaryRange: { min: 1200000, max: 1800000, currency: "INR" },
+  embedding: [0.023, -0.187, ...],  // 768 floats from NVIDIA NIM (llama-nemotron-embed-1b-v2)
+  status: "active",  // draft | active | paused | closed
+  createdAt: ISODate,
+  applicantCount: 42,
+  avgMatchScore: 67.3
+}
+
+applications collection — single document
+applications document structure
+{
+  _id: ObjectId,
+  candidateId: ObjectId,
+  jobId: ObjectId,
+  stage: "shortlisted",  // applied|under_review|shortlisted|interview|decision|outcome
+  outcome: null,  // "hired" | "rejected" | null
+  matchScore: {
+    overall: 78,
+    skillsMatch: 85,
+    experienceMatch: 70,
+    explanation: "Strong on system design and Node.js. Missing Kubernetes experience."
+  },
+  breakdown: [
+    { skill: "Node.js", required: true, candidateHas: true, weight: 3 },
+    { skill: "Kubernetes", required: true, candidateHas: false, weight: 2 },
+    { skill: "MongoDB", required: true, candidateHas: true, weight: 2 }
+  ],
+  percentileRank: 18,   // candidate is in top 18% for this job
+  stageHistory: [
+    { stage: "applied", timestamp: ISODate },
+    { stage: "under_review", timestamp: ISODate },
+    { stage: "shortlisted", timestamp: ISODate }
+  ],
+  recruiterNotes: "Strong portfolio. Schedule technical round.",
+  skillGapPath: [
+    { skill: "Kubernetes", resources: ["kube.academy", "KodeKloud free tier"] }
+  ],
+  appliedAt: ISODate,
+  updatedAt: ISODate
+}
+
+
+8. Complete Feature List
+
+
+8.1  Auth & Onboarding (Module 1)
+Feature Name
+Description
+Priority
+Role-based registration
+User selects 'Candidate' or 'Recruiter' at signup — different onboarding flows branch from here
+CORE
+Email + Google OAuth
+Auth.js v5 handles sessions with email/password and Google OAuth — no third-party auth service needed
+CORE
+Candidate profile creation
+Name, headline, location, links (GitHub/Portfolio) — minimal 4-field first screen
+CORE
+Recruiter company profile
+Company name, size, industry, website — stored as structured doc in MongoDB
+CORE
+
+8.2  Opportunity Registry — PS Deliverable 1 (Module 2)
+Feature Name
+Description
+Priority
+AI job posting (Groq)
+Recruiter types JD → Groq Llama 3.1 8B returns structured JSON with typed skills, weights, experience range, role level, culture tags
+CORE
+Skill taxonomy normalization
+Groq normalizes 'React.js' and 'ReactJS' to same canonical tag — prevents matching failures
+CORE
+Job entity preview
+Recruiter sees the parsed JSON before publishing — can edit individual fields. Makes AI transparent.
+CORE
+Job embedding generation
+NVIDIA NIM (llama-nemotron-embed-1b-v2) generates 768-dim vector on job creation, stored in MongoDB for Vector Search
+CORE
+Job status management
+Draft / Active / Paused / Closed — pause without deleting
+CORE
+Recruiter job dashboard
+All posted jobs: applicant count, avg match score, days active, pipeline summary per stage
+CORE
+Job re-decompose on edit
+If recruiter edits JD, Groq re-runs decomposition, NVIDIA NIM regenerates embeddings, all scores recalculate
+BONUS
+
+8.3  Candidate Profile & Resume (Module 3)
+Feature Name
+Description
+Priority
+Resume upload & AI parsing
+PDF upload to AWS S3 → pdf-parse extracts text → Groq Llama 3.1 8B extracts skills with inferred proficiency, work history, education, projects
+CORE
+Structured profile display
+Visual profile with skill tags, experience timeline — candidate can correct parsing errors
+CORE
+Candidate embedding generation
+NVIDIA NIM embeds structured profile into 768-dim vector stored in MongoDB for semantic matching
+CORE
+Manual skill override
+Candidate adds missed skills or removes incorrectly inferred ones — they control their structured node
+CORE
+Profile strength indicator
+Completeness score (0-100%) — more complete = better matching accuracy
+BONUS
+Re-upload & re-parse
+Updated resume triggers Groq re-parse, NVIDIA NIM regenerates embeddings, all match scores refresh
+BONUS
+Resume improvement tips
+Groq gives 3 specific suggestions post-parse — e.g. 'Add quantified outcomes to last role'
+BONUS
+
+8.4  Application Graph Engine — PS Deliverable 2 (Module 4)
+Feature Name
+Description
+Priority
+AI compatibility scoring
+On apply: Groq Llama 3.1 8B compares structured profile vs job entity → overall score, skill score, experience score, per-skill breakdown
+CORE
+D3.js force-directed graph
+Recruiter primary view — nodes sized by match score, colored by tier (green/amber/red), force-clustered by skill similarity
+CORE
+Click-to-inspect sidebar
+Click any graph node → slides open candidate sidebar with radar chart, score breakdown, action buttons
+CORE
+Compatibility radar chart
+5-axis radar: Technical Skills, Experience, Soft Skills, Domain Knowledge, Role Fit — Chart.js
+CORE
+Per-skill match checklist
+Each required skill: tick (has it), cross (missing), tilde (partial/adjacent) — with candidate's actual experience shown
+CORE
+Graph filter controls
+Filter by score tier, skill, experience range, date — filtered nodes dim in place (maintains spatial context)
+CORE
+List view toggle
+Recruiter toggles between graph and ranked table — same data, different format for different work styles
+CORE
+Skill-overlap edges
+Thin lines connect nodes sharing 3+ required skills — recruiter sees talent clusters without reading profiles
+BONUS
+Bulk candidate actions
+Select multiple nodes → move all to a stage or bulk reject — for high-volume roles
+BONUS
+
+8.5  Adaptive Search Layer — PS Deliverable 3 (Module 5)
+Feature Name
+Description
+Priority
+Semantic job search
+Natural language query embedded by NVIDIA NIM → Atlas Vector Search finds semantically matched jobs (not keyword matching)
+CORE
+Auto-recommended jobs
+On login: top 5 jobs by cosine similarity between candidate profile embedding and all active job embeddings
+CORE
+Match score in search results
+'You match 82% for this role' on every job card before applying — drives more confident applications
+CORE
+Filter by match tier
+Candidate filters search to show only jobs where they score 70%+, 80%+, etc.
+CORE
+Standard search filters
+Role type, location, experience level — layered on top of semantic ranking
+CORE
+Recruiter candidate search
+Natural language search across candidate pool: 'Python ML engineer 3+ years' — returns ranked candidates
+BONUS
+Behavior-adaptive ranking
+Click tracking adjusts recommendation weights — viewed 3 DevOps jobs = infrastructure roles ranked higher
+BONUS
+
+8.6  Application Visibility Module — PS Deliverable 4 (Module 6)
+Feature Name
+Description
+Priority
+Candidate application dashboard
+All applications: job title, company, current stage, match score, days since applied, last activity
+CORE
+Real-time pipeline tracker
+6-stage tracker: Applied → Under Review → Shortlisted → Interview → Decision → Outcome. Pusher keeps it live.
+CORE
+Percentile rank
+'You are in the top 18% of applicants' — computed from all applicant scores for the same job
+CORE
+Match breakdown on apply
+Immediately post-apply: overall score, skill-by-skill breakdown, what to expect next
+CORE
+Application timeline log
+Timestamped event log per application — full history always visible to candidate
+CORE
+Rejection with skill gap path
+On rejection: 'You matched 61%. Missing: Kubernetes, Go.' + Groq Llama 3.3 70B generated learning path per skill
+CORE
+Recruiter Kanban board
+Drag-drop candidates between stages — each drag triggers Pusher event, candidate tracker updates live
+CORE
+Recruiter notes (private)
+Per-applicant notes visible only to recruiter — stored in applications collection
+BONUS
+Application withdraw
+Candidate withdraws before 'Decision Pending' — removes from recruiter's graph in real time
+BONUS
+Stage-change highlight
+On next login after a stage change, candidate dashboard highlights the updated application with a pulse animation
+BONUS
+
+8.7  AI-Powered Extras — PS Brownie Points (Module 7)
+Feature Name
+Description
+Priority
+Auto-ranked leaderboard
+Recruiters see candidates ranked by match score — top 3 highlighted with medal indicators. No manual screening.
+CORE
+Match explainability
+Groq Llama 3.3 70B generates 3-sentence human-readable explanation of WHY a candidate scored X% — shown to both sides
+CORE
+AI Interview Simulator
+Candidate picks an applied job → Groq Llama 3.3 70B plays interviewer → asks role-specific questions derived from required skills → evaluates answers on clarity, depth, relevance
+WOW
+Interview feedback report
+Post-simulation: overall interview score, strongest answer, weakest answer, 3 specific improvement tips — downloadable
+WOW
+Skill gap learning path
+Per rejected skill: Groq Llama 3.3 70B generates 2-4 week study plan with free resources (MDN, freeCodeCamp, YouTube)
+WOW
+
+
+9. API Routes Reference
+
+
+9.1  Auth Routes
+Method
+Route
+Description
+Auth Required
+POST
+/api/auth/register
+Create user account (candidate or recruiter)
+None
+POST
+/api/auth/login
+Email login — returns session token
+None
+GET
+/api/auth/session
+Get current session user
+Any
+GET
+/api/auth/[...nextauth]
+NextAuth handler (Google OAuth)
+None
+
+9.2  Candidate Routes
+Method
+Route
+Description
+Auth
+POST
+/api/candidate/profile
+Create/update structured candidate profile
+Candidate
+POST
+/api/candidate/resume
+Upload resume PDF to S3, extract text, trigger Groq parse + NVIDIA NIM embedding
+Candidate
+GET
+/api/candidate/profile
+Get own structured profile + embedding status
+Candidate
+GET
+/api/candidate/recommendations
+Get top 5 job recommendations by vector similarity
+Candidate
+PATCH
+/api/candidate/skills
+Manual skill add/remove override
+Candidate
+
+9.3  Job Routes
+Method
+Route
+Description
+Auth
+POST
+/api/jobs
+Create job — triggers Groq decomposition + NVIDIA NIM embedding
+Recruiter
+GET
+/api/jobs
+List all active jobs (candidate view)
+Candidate
+GET
+/api/jobs/search
+Semantic search — embeds query, runs Atlas Vector Search
+Candidate
+GET
+/api/jobs/:id
+Get single job entity with structured fields
+Any
+PATCH
+/api/jobs/:id
+Update job — triggers re-decomposition + score refresh
+Recruiter
+PATCH
+/api/jobs/:id/status
+Change job status (active/paused/closed)
+Recruiter
+GET
+/api/jobs/:id/applicants
+Get all applicants for a job (graph data)
+Recruiter
+
+9.4  Application Routes
+Method
+Route
+Description
+Auth
+POST
+/api/applications
+Apply to a job — triggers Groq scoring, computes percentile rank
+Candidate
+GET
+/api/applications
+Get all applications for current user (candidate dashboard)
+Candidate
+GET
+/api/applications/:id
+Get single application with full breakdown and history
+Both
+PATCH
+/api/applications/:id/stage
+Update stage — triggers Pusher event to candidate
+Recruiter
+PATCH
+/api/applications/:id/notes
+Add/update private recruiter notes
+Recruiter
+DELETE
+/api/applications/:id
+Candidate withdraws application
+Candidate
+
+9.5  AI / Interview Routes
+Method
+Route
+Description
+Auth
+POST
+/api/interview/start
+Start interview session for a specific job — Groq Llama 3.3 70B generates first question
+Candidate
+POST
+/api/interview/respond
+Submit answer — Groq evaluates answer, returns score + next question
+Candidate
+GET
+/api/interview/:id/report
+Get completed interview feedback report
+Candidate
+POST
+/api/ai/skill-gap
+Generate learning path for a list of missing skills
+Candidate
+
+
+10. Phase-by-Phase Implementation Plan
+
+
+Timeline Overview
+Total: 24 hours split into 6 phases. Phases 1-4 cover all core features. Phases 5-6 cover bonus, wow features, and demo hardening. If the team falls behind, skip Phase 5 (bonus) and prioritize Phase 6 (demo hardening) — a polished core demo beats a broken full build.
+
+Phase 0  |  Project Setup & Architecture
+Hours 0–1  (all 4 members)
+Foundation
+
+Everyone completes in parallel
+Person A (Full-Stack Lead): Init Next.js 14 project with TypeScript, Tailwind, shadcn/ui. Push to GitHub. Connect Vercel for auto-deploy. Set up .env.local with all secrets.
+Person B (AI Engineer): Create Groq account at console.groq.com — get free API key (no credit card). Create NVIDIA Developer account at build.nvidia.com — get NIM API key. Test Groq with a sample prompt using llama-3.1-8b-instant. Test NVIDIA NIM embedding endpoint. Document all prompt templates in a shared /lib/prompts.ts file.
+Person C (Frontend Engineer): Set up MongoDB Atlas Flex cluster, enable Atlas Vector Search, create vector indexes on jobs.embedding and candidateProfiles.embedding. Configure AWS S3 bucket with CORS for file upload.
+Person D (Graph Engineer): Set up Pusher account, create app, get keys. Prototype D3 force graph with 10 dummy nodes in isolation — get physics feeling right before connecting to real data.
+
+Phase 0 Deliverable
+Running Next.js app on localhost. Vercel deployment URL live. MongoDB cluster connected. Groq API key tested and responding. NVIDIA NIM embedding API responding. D3 prototype rendering. All secrets in .env.local.
+
+Phase 1  |  Auth, Schema & Data Layer
+Hours 1–4  (Person A leads, others support)
+Core Infrastructure
+
+Person A — Auth System
+Install Auth.js v5: npm install next-auth@beta
+Configure email/password auth with bcryptjs for password hashing
+Configure Google OAuth provider
+Create /api/auth/[...nextauth]/route.ts handler
+Create /api/auth/register/route.ts for new user creation
+Build login page (/app/login/page.tsx) and register page with role selector
+
+Person A — MongoDB Schema
+Install Mongoose: npm install mongoose
+Create /lib/db.ts — connection singleton with connection caching
+Create Mongoose models: User, CandidateProfile, CompanyProfile, Job, Application, InterviewSession
+Add vector indexes in Atlas UI: jobs.embedding (768 dims, cosine), candidateProfiles.embedding (768 dims, cosine)
+
+Person B — Core AI Utilities (Groq + NVIDIA NIM)
+Install Groq SDK: npm install groq-sdk
+Install NVIDIA NIM client (OpenAI-compatible): npm install openai  — NIM uses same interface, just different base URL
+Create /lib/groq.ts — Groq client singleton with 500ms retry delay between calls
+Create /lib/nim.ts — NVIDIA NIM client for embeddings only (base URL: https://integrate.api.nvidia.com/v1)
+Build parseResume(pdfText) function in /lib/ai/parseResume.ts — calls Groq llama-3.1-8b-instant, returns structured JSON: skills[], experience[], education[]
+Build decomposeJD(jdText) function in /lib/ai/decomposeJD.ts — calls Groq llama-3.1-8b-instant, returns: requiredSkills[], experienceRange, roleLevel, cultureTags
+Build scoreMatch(candidateProfile, jobEntity) in /lib/ai/scoreMatch.ts — calls Groq llama-3.1-8b-instant, returns: overall (0-100), skillsMatch, experienceMatch, breakdown[], explanation string
+Build generateEmbedding(text) in /lib/ai/embed.ts — calls NVIDIA NIM llama-nemotron-embed-1b-v2, returns number[768]
+Test all 4 functions with sample data — log outputs for team to review before moving to Phase 2
+
+Person C — AWS S3 Setup
+Install AWS SDK: npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+Create /lib/s3.ts — uploadResume(file) and getResumeURL(key) functions
+Create /api/candidate/resume/route.ts — accepts multipart form data, uploads to S3, returns key
+
+Phase 1 Deliverable
+Auth working (login/register/logout). All Mongoose models defined. All 4 AI functions tested and returning correct JSON (Groq for generation, NVIDIA NIM for embeddings). S3 upload working. Vector indexes created in Atlas.
+
+Phase 2  |  Core Features — Candidate Side
+Hours 4–10  (Person B + C lead, A supports)
+PS Deliverables 1, 3, 4
+
+Person C — Candidate Dashboard Pages
+Build /app/candidate/layout.tsx — sidebar nav with: Profile, Find Jobs, My Applications, Interview Practice
+Build /app/candidate/profile/page.tsx — resume upload dropzone, parsed profile display with skill tags, manual override controls
+POST /api/candidate/resume — upload to S3, extract text (use pdf-parse: npm install pdf-parse), call parseResume(), call generateEmbedding(), save CandidateProfile to MongoDB
+Build /app/candidate/jobs/page.tsx — job search input, job cards with match score badge, filter controls
+Build /app/candidate/jobs/[id]/page.tsx — job detail with: title, company, skills required, candidate's match score breakdown, Apply button
+
+Person B — Application Flow
+POST /api/applications — fetch candidate embedding + job embedding from MongoDB, call Atlas Vector Search OR compute cosine similarity in-server, call scoreMatch(), create Application doc with full breakdown, return score to frontend immediately
+Build match score breakdown component — skill-by-skill checklist with tick/cross/tilde indicators, radar chart (Chart.js)
+Build post-apply screen — 'You matched 78%' hero number, breakdown card, 'What happens next' explainer
+
+Person C — Application Visibility Module (PS Deliverable 4)
+Build /app/candidate/applications/page.tsx — application dashboard: list of all apps with stage pill, match score, days elapsed
+Build /app/candidate/applications/[id]/page.tsx — single application detail: stage tracker (6-stage progress bar), percentile rank, match breakdown, timeline log
+Install Pusher JS: npm install pusher-js
+Add Pusher subscription in application detail page — subscribe to application-{applicationId} channel, on stage-updated event re-fetch and update UI
+
+Person A — Job Search (PS Deliverable 3)
+GET /api/jobs/search?q= — embed query via NVIDIA NIM (llama-nemotron-embed-1b-v2), run $vectorSearch aggregation in MongoDB, return top 10 jobs with scores
+GET /api/candidate/recommendations — same Vector Search but using candidate's stored profile embedding as query vector
+Add match score preview to each job card — computed by calling a lightweight version of scoreMatch or using precomputed vector distance
+
+Phase 2 Deliverable
+Candidate can: register, upload resume, see parsed profile, search jobs semantically, see match score before applying, apply and see score breakdown, track application in real-time pipeline. This is the complete candidate-side happy path.
+
+Phase 3  |  Core Features — Recruiter Side
+Hours 10–16  (Person D leads, A supports)
+PS Deliverables 1, 2, 4
+
+Person A — Recruiter API Routes
+POST /api/jobs — receive JD text, call decomposeJD(), call generateEmbedding() on structured output, save Job doc to MongoDB
+GET /api/jobs/:id/applicants — fetch all Application docs for the job, join with CandidateProfile data, return graph-ready JSON: [{candidateId, name, score, skills, breakdown}]
+PATCH /api/applications/:id/stage — update stage in MongoDB, trigger MongoDB Change Stream listener, fire Pusher event on job-{jobId} channel AND application-{applicationId} channel
+PATCH /api/applications/:id/notes — update recruiterNotes field (private)
+
+Person D — D3.js Applicant Graph (PS Deliverable 2)
+Build /app/recruiter/jobs/[id]/graph/page.tsx — the visual centrepiece
+Fetch /api/jobs/:id/applicants on mount
+D3 force simulation: nodes = applicants, charge = -200, link strength based on skill overlap
+Node radius = Math.sqrt(matchScore) * 3 (larger = better match)
+Node fill: green (#16A34A) for score 80+, amber (#D97706) for 50-79, red (#DC2626) for below 50
+On node click: fire a React state update to show CandidateInspector sidebar (slides in from right)
+CandidateInspector: name, headline, overall score as hero number, radar chart, per-skill checklist, pipeline action dropdown (move to stage), recruiter notes textarea
+Add filter panel: score tier buttons, skill tag filter (multi-select), experience slider — filtered nodes opacity 0.15
+Add list/graph toggle button in header
+
+Person D — Recruiter Dashboard & Kanban
+Build /app/recruiter/dashboard/page.tsx — all jobs table: title, applicant count, avg score, days active, status chip, quick-link to graph
+Build /app/recruiter/jobs/[id]/pipeline/page.tsx — Kanban board with 6 columns
+Each Kanban card: candidate name, match score badge, days in current stage
+Drag-and-drop using @dnd-kit/core (npm install @dnd-kit/core) — on drop call PATCH /api/applications/:id/stage
+Install Pusher server SDK: npm install pusher
+In PATCH /api/applications/:id/stage route: after MongoDB update, call pusher.trigger() to fire event
+
+Person C — Job Posting UI
+Build /app/recruiter/jobs/new/page.tsx — JD textarea + 'AI Parse' button
+POST to /api/jobs → loading state → show parsed entity preview (editable fields: skills, experience range, role level)
+'Publish Job' button confirms and saves — recruiter sees success screen with link to graph view
+
+Phase 3 Deliverable
+Recruiter can: register, post a job (AI-decomposed), see D3 applicant graph, click any node to inspect candidate, move candidate to new pipeline stage, view Kanban board. Candidate's pipeline tracker updates in real-time when recruiter moves them. Full bidirectional loop complete.
+
+Phase 4  |  AI Brownie Points
+Hours 16–20  (Person B leads, C supports)
+All 3 Brownie Points
+
+Person B — AI Interview Simulator
+Build /app/candidate/interview/page.tsx — select a job from applied list, then enter chat interface
+POST /api/interview/start — Groq prompt (llama-3.3-70b-versatile): 'You are a technical interviewer for [job title]. Required skills: [skills]. Ask your first interview question. Be specific to the role.'
+Chat UI: messages[] state, auto-scroll, candidate types answer, sends via POST /api/interview/respond
+POST /api/interview/respond — sends full conversation history to Groq + candidate's new answer, Groq evaluates answer (score, feedback) and asks next question
+After 5 questions: POST /api/interview/:id/finish — Groq generates feedback report: {overallScore, strongestAnswer, weakestAnswer, improvementTips[3]}
+Display feedback report as a formatted card — downloadable as text
+
+Person C — Skill Gap Learning Path
+In the rejection flow (when outcome = 'rejected'), call POST /api/ai/skill-gap with the breakdown[] of missing skills
+Groq prompt (llama-3.3-70b-versatile): 'Generate a 2-3 week learning path for [skill]. Include free resources only. Return JSON: {weeks, topics[], resources[]}'
+Display as accordion component: one panel per missing skill, with weekly breakdown and resource links
+
+Person A — Auto-ranking & Match Explainability
+In the applicant graph and list view, ensure candidates are pre-sorted by matchScore.overall DESC — top 3 get medal badges (gold/silver/bronze)
+Ensure matchScore.explanation field (from Groq's scoreMatch call) is displayed in the CandidateInspector sidebar under 'Why this score'
+Display same explanation to the candidate in their application detail page — so both sides read the same text
+
+Phase 4 Deliverable
+AI Interview Simulator working end-to-end. Skill gap learning path displayed on rejection. Candidates auto-ranked in recruiter's graph with medal indicators. Match explanation visible to both sides. All 3 brownie points complete.
+
+Phase 5  |  Bonus Features & Polish
+Hours 20–22  (all members)
+If Ahead of Schedule
+
+Person A: Recruiter candidate search — natural language search across candidate pool using Atlas Vector Search
+Person B: Resume improvement suggestions — post-parse Groq tips shown as dismissible banner
+Person C: Profile strength indicator — completeness score with progress ring, checklist of what to add
+Person D: Skill-overlap edges in D3 graph — compute shared skills between node pairs, draw thin gray lines for 3+ shared required skills
+Person C: Application withdraw — DELETE route + confirmation modal
+Person A: Behavior-adaptive recommendations — store viewed job IDs in user doc, apply weight multiplier in Vector Search
+
+Phase 6  |  Demo Hardening & Pitch Prep
+Hours 22–24  (all members)
+Non-Negotiable
+
+Data Seeding (Person A + B — 1 hour)
+Create /scripts/seed.ts — generate 10 realistic jobs across 4 domains (frontend, backend, ML, DevOps)
+Generate 40 candidate profiles with varied skills and experience levels
+Run scoring for all 40 candidates against all 10 jobs — pre-populate Applications collection
+Ensure score distribution is realistic: 5-6 green nodes, 15-20 amber, rest red per job — graph looks interesting
+
+Bug Fixes & UX Polish (Person C + D — 1 hour)
+Ensure Pusher real-time update works reliably — test end-to-end: recruiter moves candidate → candidate sees update within 2 seconds
+Ensure D3 graph animates on load — nodes fly in with staggered delay for visual impact
+Check all loading states — every Groq / NVIDIA NIM call must show a spinner, not a frozen UI
+Fix any mobile layout issues — judges may view on phones
+Ensure all error states are handled gracefully — Groq timeout (retry once with 500ms delay), NVIDIA NIM failure (fall back to cosine similarity in JS), S3 failure, auth redirect
+
+Demo Flow Rehearsal (all 4 — 30 minutes)
+Pre-select the 'best' demo job and the 'best-matched' candidate — know their names, have them bookmarked
+Practice the recruiter graph reveal: open the job → graph animates in → click the top node → sidebar slides open → move to Shortlisted → switch to candidate screen → pipeline updates live
+Practice the interview simulator demo: pick a volunteer, select a job, run 2-3 questions live
+Record a 30-second screen recording backup in case live demo fails
+
+
+11. Team Role Split
+
+
+Person
+Primary Role
+Owns
+Key Deliverables
+Person A
+Full-Stack Lead
+Next.js setup, MongoDB, API routes, auth, search
+All API routes, Auth.js, MongoDB schema, Atlas Vector Search, seeding script
+Person B
+AI / ML Engineer
+Groq + NVIDIA NIM integrations, interview simulator, embeddings
+parseResume(), decomposeJD(), scoreMatch(), generateEmbedding(), interview chat loop, feedback report
+Person C
+Frontend Engineer
+All candidate-facing pages, real-time Pusher client, AWS S3
+Candidate dashboard, job search UI, application pipeline tracker, skill gap display, resume upload
+Person D
+Graph Engineer
+D3.js graph, recruiter dashboard, Kanban, demo polish
+Force-directed applicant graph, CandidateInspector sidebar, Kanban board, pitch deck, demo script
+
+Collaboration Protocol
+One shared GitHub repo. Each person works on a feature branch, PRs merged to main by Person A. Shared /lib/ folder for Groq, NVIDIA NIM, MongoDB, and S3 utilities — anyone can import. Standup every 4 hours (Hours 4, 8, 12, 16, 20) to catch blockers early. If Person B finishes AI work early, they support Person C on frontend.
+
+
+12. Risk Register
+
+
+Risk
+Severity
+Likelihood
+Mitigation
+Groq rate limit hit during seeding (llama-3.1-8b: 14,400/day, llama-3.3-70b: 1,000/day)
+Low
+Low
+Cache all scores in MongoDB — never re-score the same candidate+job pair twice. Add 500ms delay between calls. Run seeding script at Hour 22 before demo, not during it.
+NVIDIA NIM embedding endpoint slow or unavailable
+Medium
+Low
+Fall back to server-side cosine similarity in plain JavaScript (10 lines, runs in <10ms for 40 candidates). Pre-generate and cache all embeddings during seeding — NIM only called on new profile/job creation.
+MongoDB Atlas Vector Search index not ready
+High
+Low
+Create index at Hour 0. Fall back to server-side cosine similarity in JS — ship without Vector Search if needed.
+Pusher real-time not working on Vercel serverless
+High
+Medium
+Test Pusher trigger in API route at Hour 1. Alternative: use polling (setInterval every 5s) as fallback — less elegant but functional for demo.
+D3.js graph performance with 40 nodes
+Medium
+Low
+40 nodes is trivially small for D3. Set charge = -150 to prevent excessive spreading. Pre-compute skill-overlap edges server-side.
+AWS S3 CORS blocking file uploads
+Medium
+Medium
+Configure S3 bucket CORS at Hour 0 (30 min task). Alternative: use base64 encoding and store resume text directly in MongoDB if S3 fails.
+Groq JSON parsing failures (LLM not returning valid JSON)
+Medium
+Medium
+Wrap every Groq call in a try/catch. Add 'You must return only valid JSON, no markdown, no explanation' to every prompt. Use Groq's JSON mode if available. Retry once on parse failure.
+Auth.js v5 beta instability
+Low
+Low
+v5 is stable for basic email+OAuth. Fallback: implement manual JWT auth with jose library (2 hours to build if needed).
+
+
+13. Demo Script — The Pitch Playbook
+
+
+Goal
+The judges should leave thinking: 'That is what job portals should have been all along.' Three moments create this: (1) the graph reveal, (2) the real-time pipeline sync, (3) the live interview simulator.
+
+13.1  Opening Hook (30 seconds)
+Open with a single statistic: '80% of job applications are never seen by a human. Both candidates and recruiters have learned to ghost each other. We did not build a better job board. We built the thing job boards were always supposed to be — a transparent network where both sides of every application can finally see each other.'
+
+13.2  Demo Sequence (3 minutes)
+Recruiter posts a job — show the AI parsing the JD into a structured entity in real time. Point out: 'Not free text. A machine-readable object.'
+Candidate uploads resume — Groq Llama 3.1 8B parses it into a structured profile in real time. Point out the skill tags, proficiency inference.
+Candidate searches for 'backend engineer' — show semantic results appearing that do not contain those exact words. Point out: 'This is not keyword matching.'
+Candidate applies — match score breakdown appears immediately. Per-skill checklist. Percentile rank. 'You are in the top 18% for this role.' No black hole.
+Switch to recruiter screen — open the applicant graph. Pause here. Let the visual breathe. Nodes are flying in, sized by match. Ask: 'Can you tell who the best candidates are just by looking?' The answer is yes.
+Click the largest node — CandidateInspector slides in. Radar chart. Skill checklist. 'Move to Shortlisted.' Click.
+Switch back to candidate screen — the pipeline tracker updates live. Real-time. 'The black hole is gone.'
+If time: open Interview Simulator. Let a judge volunteer. Groq Llama 3.3 70B asks a role-specific question live. Show the answer evaluation. Show the feedback report.
+
+13.3  Closing Statement
+'Every feature you just saw maps directly to a PS3 deliverable. The Opportunity Registry. The Application Graph Engine. The Adaptive Search Layer. The Application Visibility Module. Plus all three brownie points. Built in 24 hours on a completely free stack — MongoDB Atlas, Groq, NVIDIA NIM, Vercel, Pusher, AWS S3. No black holes. No keyword matching. No spreadsheets. Just a transparent graph where talent finds opportunity — and opportunity finds talent.'
