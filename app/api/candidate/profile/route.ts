@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import connectDB from '@/lib/db'
 import CandidateProfile from '@/lib/models/CandidateProfile'
+import User from '@/lib/models/User'
 import { generateEmbedding } from '@/lib/nim'
 import { getResumeSignedUrl } from '@/lib/s3'
 
@@ -13,6 +14,11 @@ export async function GET() {
   await connectDB()
   const profile = await CandidateProfile.findOne({ userId: session.user.id }).lean() as Record<string, unknown> | null
   if (!profile) return NextResponse.json({})
+
+  const user = await User.findById(session.user.id).select('name').lean() as { name?: string } | null
+  if (user?.name) {
+    profile.name = user.name
+  }
 
   // Convert stored S3 key to a pre-signed URL so the frontend can display a download link
   if (profile.resumeS3Key && typeof profile.resumeS3Key === 'string') {
@@ -86,6 +92,10 @@ export async function PUT(req: Request) {
     if ((body.experience || []).length > 0) strength += 25
     if ((body.education || []).length > 0) strength += 15
     if ((body.projects || []).length > 0) strength += 10
+
+    if (body.name) {
+      await User.findByIdAndUpdate(session.user.id, { name: body.name })
+    }
 
     const profile = await CandidateProfile.findOneAndUpdate(
       { userId: session.user.id },

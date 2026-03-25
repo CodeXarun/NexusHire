@@ -196,6 +196,7 @@ export default function ResumeBuilderPage() {
     setSaving(true)
     try {
       const body = {
+        name: form.name,
         headline: form.headline,
         bio: form.bio,
         location: form.location,

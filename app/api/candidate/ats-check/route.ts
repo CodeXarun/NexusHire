@@ -32,12 +32,20 @@ export async function POST(req: Request) {
   const education = (profile.education as Array<{ degree: string; institution: string }> || [])
     .map((e) => `${e.degree} from ${e.institution}`)
     .join('. ')
+  const projects = (profile.projects as Array<{ name: string; description: string; techStack: string[] }> || [])
+    .map((p) => `${p.name} (${(p.techStack || []).join(', ')}): ${p.description}`)
+    .join('. ')
+  const certifications = (profile.certifications as Array<{ title: string }> || [])
+    .map((c) => c.title)
+    .join(', ')
   const resumeText = [
     profile.headline,
     profile.bio,
     `Skills: ${skills}`,
     `Experience: ${experience}`,
     `Education: ${education}`,
+    `Projects: ${projects}`,
+    `Certifications: ${certifications}`,
     profile.resumeText,
   ].filter(Boolean).join('\n')
 

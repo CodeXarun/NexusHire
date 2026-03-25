@@ -225,14 +225,14 @@ ${jobDescription.slice(0, 2000)}
 
 Return this exact JSON structure:
 {
-  "atsScore": 72,
+  "atsScore": 0, // REPLACE 0 with the computed score (0-100) based on match
   "matchedKeywords": ["React", "Node.js", "MongoDB"],
   "missingKeywords": ["Docker", "Kubernetes", "AWS"],
   "feedback": "3-4 sentence specific, actionable feedback on how to close the gap for this exact JD."
 }
 
 Rules:
-- atsScore: 0-100 based on keyword overlap, skill relevance, and experience alignment
+- atsScore: An integer from 0 to 100 representing the exact compatibility match. DO NOT output 0 unless it's a 0% match. DO NOT output 72 or 85 unless it is exactly that match. Compute this properly!
 - matchedKeywords: important skills/keywords from the JD the candidate clearly has (5-10 items max)
 - missingKeywords: important skills/keywords from the JD the candidate lacks (5-10 items max)
 - feedback must be specific to this candidate and this JD — no generic advice`,
