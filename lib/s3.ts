@@ -1,13 +1,22 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
-const s3 = new S3Client({
-  region: process.env.AWS_REGION ?? 'ap-south-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-})
+let s3: S3Client | null = null
+
+function getS3Client(): S3Client {
+  if (!s3) {
+    const accessKeyId = process.env.AWS_ACCESS_KEY_ID
+    const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
+    if (!accessKeyId || !secretAccessKey) {
+      throw new Error('AWS credentials not configured')
+    }
+    s3 = new S3Client({
+      region: process.env.AWS_REGION ?? 'ap-south-1',
+      credentials: { accessKeyId, secretAccessKey },
+    })
+  }
+  return s3
+}
 
 const BUCKET = process.env.AWS_S3_BUCKET ?? 'nexushire-resumes'
 
@@ -16,7 +25,7 @@ export async function uploadResume(
   key: string,
   contentType = 'application/pdf'
 ): Promise<string> {
-  await s3.send(new PutObjectCommand({
+  await getS3Client().send(new PutObjectCommand({
     Bucket: BUCKET,
     Key: key,
     Body: buffer,
@@ -27,7 +36,7 @@ export async function uploadResume(
 
 export async function getResumeSignedUrl(key: string): Promise<string> {
   const cmd = new GetObjectCommand({ Bucket: BUCKET, Key: key })
-  return getSignedUrl(s3, cmd, { expiresIn: 3600 })
+  return getSignedUrl(getS3Client(), cmd, { expiresIn: 3600 })
 }
 
 // Generic image upload used for profile photos (stored as object keys in DB).
@@ -36,7 +45,7 @@ export async function uploadImage(
   key: string,
   contentType: string
 ): Promise<string> {
-  await s3.send(new PutObjectCommand({
+  await getS3Client().send(new PutObjectCommand({
     Bucket: BUCKET,
     Key: key,
     Body: buffer,
@@ -51,5 +60,5 @@ export async function getImageSignedUrl(
   expiresInSeconds = 60 * 60 * 24 * 6 // 6 days
 ): Promise<string> {
   const cmd = new GetObjectCommand({ Bucket: BUCKET, Key: key })
-  return getSignedUrl(s3, cmd, { expiresIn: expiresInSeconds })
+  return getSignedUrl(getS3Client(), cmd, { expiresIn: expiresInSeconds })
 }
