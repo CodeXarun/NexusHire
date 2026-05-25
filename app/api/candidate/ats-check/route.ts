@@ -13,14 +13,29 @@ export async function POST(req: Request) {
   }
 
   let jobDescription = ''
+  let jdPdfBase64 = ''
   let pdfBase64 = ''
 
   try {
     const body = await req.json()
     jobDescription = body.jobDescription || ''
+    jdPdfBase64 = body.jdPdfBase64 || ''
     pdfBase64 = body.pdfBase64 || ''
   } catch (err) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+  }
+
+  // Parse JD PDF if provided
+  if (jdPdfBase64) {
+    try {
+      const jdBuffer = Buffer.from(jdPdfBase64, 'base64')
+      const jdPdfData = await pdfParse(jdBuffer)
+      // Append or override JD text
+      jobDescription = (jobDescription + '\n\n' + jdPdfData.text).trim()
+    } catch (err: any) {
+      console.error('JD PDF parse error:', err)
+      return NextResponse.json({ error: `Failed to parse the uploaded JD PDF: ${err.message || 'Unknown error'}` }, { status: 400 })
+    }
   }
 
   // Validate job description length/quality if provided

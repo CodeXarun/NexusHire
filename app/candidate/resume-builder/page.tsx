@@ -127,6 +127,7 @@ export default function ResumeBuilderPage() {
 
   // ATS state
   const [jd, setJd] = useState('')
+  const [jdPdf, setJdPdf] = useState<File | null>(null)
   const [atsPdf, setAtsPdf] = useState<File | null>(null)
   const [atsChecking, setAtsChecking] = useState(false)
   const [atsResult, setAtsResult] = useState<ATSResult | null>(null)
@@ -352,8 +353,8 @@ export default function ResumeBuilderPage() {
 
   // ─── ATS Check ───────────────────────────────────────────────────────────
   async function runAtsCheck() {
-    if (!jd.trim() && !atsPdf) {
-      toast.error('Please paste a Job Description or upload a PDF to check')
+    if (!jd.trim() && !jdPdf && !atsPdf) {
+      toast.error('Please paste a Job Description, upload a JD PDF, or upload a Resume PDF to check')
       return
     }
     setAtsChecking(true); setAtsResult(null)
@@ -368,10 +369,20 @@ export default function ResumeBuilderPage() {
         })
       }
 
+      let jdPdfBase64 = ''
+      if (jdPdf) {
+        jdPdfBase64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve((reader.result as string).split(',')[1] || '')
+          reader.onerror = reject
+          reader.readAsDataURL(jdPdf)
+        })
+      }
+
       const res = await fetch('/api/candidate/ats-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobDescription: jd, pdfBase64 }),
+        body: JSON.stringify({ jobDescription: jd, jdPdfBase64, pdfBase64 }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
@@ -782,8 +793,14 @@ export default function ResumeBuilderPage() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Optional: Upload Resume (PDF) to check against instead of saved profile</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Upload Resume to check ATS Score</label>
               <input type="file" accept=".pdf" onChange={(e) => setAtsPdf(e.target.files?.[0] || null)}
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-600 transition-all file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-violet-500/10 file:text-violet-400 hover:file:bg-violet-500/20" />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Upload JD PDF</label>
+              <input type="file" accept=".pdf" onChange={(e) => setJdPdf(e.target.files?.[0] || null)}
                 className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-600 transition-all file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-violet-500/10 file:text-violet-400 hover:file:bg-violet-500/20" />
             </div>
 
@@ -794,7 +811,7 @@ export default function ResumeBuilderPage() {
                 {atsChecking ? 'Analysing…' : 'Check ATS Score'}
               </button>
               {atsResult && (
-                <button onClick={() => { setAtsResult(null); setJd(''); setAtsPdf(null) }}
+                <button onClick={() => { setAtsResult(null); setJd(''); setJdPdf(null); setAtsPdf(null) }}
                   className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
                   <RefreshCw className="h-4 w-4" /> Reset
                 </button>
