@@ -7,7 +7,12 @@ export async function GET(req: Request) {
   const email = searchParams.get('email')
   if (!email) return NextResponse.json({ exists: false })
 
-  await connectDB()
-  const user = await UserModel.findOne({ email }).select('_id').lean()
-  return NextResponse.json({ exists: !!user })
+  try {
+    await connectDB()
+    const user = await UserModel.findOne({ email }).select('_id').lean()
+    return NextResponse.json({ exists: !!user })
+  } catch (error: any) {
+    console.error('Error in check-email:', error)
+    return NextResponse.json({ exists: false, error: error.message }, { status: 500 })
+  }
 }

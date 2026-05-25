@@ -48,7 +48,13 @@ function LoginForm() {
 
       // Check if this user already exists in our DB
       const check = await fetch(`/api/auth/check-email?email=${encodeURIComponent(email)}`)
-      const { exists } = await check.json()
+      const data = await check.json()
+
+      if (!check.ok) {
+        throw new Error(data.error || 'Failed to verify email. Please try again.')
+      }
+
+      const { exists } = data
 
       if (exists) {
         // Existing user — sign in directly

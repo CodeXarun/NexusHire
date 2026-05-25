@@ -52,7 +52,13 @@ function RegisterForm() {
       // Check if user already exists
       const email = result.user.email ?? ''
       const check = await fetch(`/api/auth/check-email?email=${encodeURIComponent(email)}`)
-      const { exists } = await check.json()
+      const data = await check.json()
+
+      if (!check.ok) {
+        throw new Error(data.error || 'Failed to verify email. Please try again.')
+      }
+
+      const { exists } = data
 
       if (exists) {
         toast('Account already exists. Signing you in…')
