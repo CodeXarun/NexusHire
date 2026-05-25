@@ -232,6 +232,7 @@ Return this exact JSON structure:
 }
 
 Rules:
+- If the Job Description appears to be random words, nonsensical, or clearly not a real job description (e.g., "abcc"), set atsScore to 0, matchedKeywords to [], missingKeywords to [], and feedback to "Invalid JD".
 - atsScore: An integer from 0 to 100 representing the exact compatibility match. DO NOT output 0 unless it's a 0% match. DO NOT output 72 or 85 unless it is exactly that match. Compute this properly!
 - matchedKeywords: important skills/keywords from the JD the candidate clearly has (5-10 items max)
 - missingKeywords: important skills/keywords from the JD the candidate lacks (5-10 items max)
@@ -361,4 +362,23 @@ Rules:
 - Make actionableSteps SPECIFIC to this job and recruiter feedback, not generic advice
 - If recruiter notes mention something specific (soft skill, attitude, experience level), address it directly
 - topGaps must have at least 2 items and at most 5`,
+
+  RESUME_QUALITY_CHECK: (resumeText: string) => `You are an expert Resume Reviewer and Technical Recruiter.
+Analyze the provided candidate profile/resume text for general quality, impact, clarity, and ATS readability.
+
+Return a JSON object EXACTLY matching this structure:
+{
+  "atsScore": 0, // REPLACE 0 with a 0-100 score based on best practices, action verbs, quantifiable metrics, and structure
+  "matchedKeywords": ["Key Strength 1", "Key Strength 2"], // key strengths, impressive skills or metrics found
+  "missingKeywords": ["Quantifiable results", "Action verbs"], // things that are missing or weak
+  "feedback": "3-4 sentences of specific, actionable advice to improve the resume"
+}
+
+Candidate Profile:
+${resumeText.slice(0, 4000)}
+
+Rules:
+- Evaluate the candidate based on standard resume best practices.
+- Give a score from 0 to 100. Be realistic. If it's a weak resume, give it a lower score.
+- Ensure the response is valid JSON. Do not include markdown formatting or extra text.`,
 }

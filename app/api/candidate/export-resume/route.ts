@@ -195,6 +195,14 @@ export async function GET() {
     if (profile.githubUrl) linkParts.push({ text: simplifyUrl(String(profile.githubUrl)), url: String(profile.githubUrl) })
     if (profile.tryhackmeUrl) linkParts.push({ text: simplifyUrl(String(profile.tryhackmeUrl)), url: String(profile.tryhackmeUrl) })
 
+    if (Array.isArray(profile.customLinks)) {
+      profile.customLinks.forEach((link: any) => {
+        if (link.name && link.url) {
+          linkParts.push({ text: link.name, url: String(link.url) })
+        }
+      })
+    }
+
     if (linkParts.length > 0) {
       doc.moveDown(0.25)
       // Render the full link line as a single centred call to avoid PDFKit

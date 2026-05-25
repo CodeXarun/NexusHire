@@ -40,6 +40,11 @@ export interface ISkillGroup {
   skills: string[]   // e.g. ["Java", "C++", "Python"]
 }
 
+export interface ICustomLink {
+  name: string
+  url: string
+}
+
 export interface ICandidateProfile extends Document {
   _id: mongoose.Types.ObjectId
   userId: mongoose.Types.ObjectId
@@ -51,6 +56,7 @@ export interface ICandidateProfile extends Document {
   portfolioUrl?: string
   linkedinUrl?: string
   tryhackmeUrl?: string
+  customLinks: ICustomLink[]
   skills: ISkill[]
   skillGroups: ISkillGroup[]   // for resume PDF display
   experience: IExperience[]
@@ -78,6 +84,7 @@ const CandidateProfileSchema = new Schema<ICandidateProfile>({
   portfolioUrl: String,
   linkedinUrl: String,
   tryhackmeUrl: String,
+  customLinks: [{ name: String, url: String }],
   skills: [{
     skill: String,
     proficiency: { type: String, enum: ['beginner', 'intermediate', 'advanced', 'expert'] },

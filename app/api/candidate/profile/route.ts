@@ -115,6 +115,7 @@ export async function PUT(req: Request) {
         linkedinUrl,
         portfolioUrl,
         tryhackmeUrl,
+        customLinks: Array.isArray(body.customLinks) ? body.customLinks : [],
         embedding,
         profileStrength: strength,
       },

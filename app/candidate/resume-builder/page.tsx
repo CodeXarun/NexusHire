@@ -29,6 +29,7 @@ interface ATSResult {
 interface ResumeForm {
   name: string; phone: string; headline: string; location: string
   github: string; linkedin: string; portfolio: string; tryhackme: string
+  customLinks: { name: string; url: string }[]
   bio: string
   flatSkills: string          // comma-separated, used for quick entry + auto-categorize
   skillGroups: SkillGroup[]   // categorised rows shown after auto-categorize or manual edit
@@ -42,6 +43,7 @@ interface ResumeForm {
 const EMPTY_FORM: ResumeForm = {
   name: '', phone: '', headline: '', location: '',
   github: '', linkedin: '', portfolio: '', tryhackme: '',
+  customLinks: [],
   bio: '',
   flatSkills: '',
   skillGroups: [],
@@ -125,6 +127,7 @@ export default function ResumeBuilderPage() {
 
   // ATS state
   const [jd, setJd] = useState('')
+  const [atsPdf, setAtsPdf] = useState<File | null>(null)
   const [atsChecking, setAtsChecking] = useState(false)
   const [atsResult, setAtsResult] = useState<ATSResult | null>(null)
 
@@ -148,6 +151,7 @@ export default function ResumeBuilderPage() {
       linkedin: profile.linkedinUrl || '',
       portfolio: profile.portfolioUrl || '',
       tryhackme: profile.tryhackmeUrl || '',
+      customLinks: profile.customLinks || [],
       bio: profile.bio || '',
       flatSkills: profile.skills?.length
         ? (profile.skills as { skill: string }[]).map((s) => s.skill).join(', ')
@@ -205,6 +209,7 @@ export default function ResumeBuilderPage() {
         linkedinUrl: form.linkedin,
         portfolioUrl: form.portfolio,
         tryhackmeUrl: form.tryhackme,
+        customLinks: form.customLinks,
         skillGroups: form.skillGroups
           .filter((g) => g.category.trim())
           .map((g) => ({
@@ -347,13 +352,26 @@ export default function ResumeBuilderPage() {
 
   // ─── ATS Check ───────────────────────────────────────────────────────────
   async function runAtsCheck() {
-    if (!jd.trim()) { toast.error('Paste a job description first'); return }
+    if (!jd.trim() && !atsPdf) {
+      toast.error('Please paste a Job Description or upload a PDF to check')
+      return
+    }
     setAtsChecking(true); setAtsResult(null)
     try {
+      let pdfBase64 = ''
+      if (atsPdf) {
+        pdfBase64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve((reader.result as string).split(',')[1] || '')
+          reader.onerror = reject
+          reader.readAsDataURL(atsPdf)
+        })
+      }
+
       const res = await fetch('/api/candidate/ats-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobDescription: jd }),
+        body: JSON.stringify({ jobDescription: jd, pdfBase64 }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
@@ -466,6 +484,35 @@ export default function ResumeBuilderPage() {
                       onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))} />
                   </Field>
                 ))}
+              </div>
+              
+              {/* Custom Links */}
+              <div className="mt-4 border-t border-white/5 pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium text-muted-foreground">Additional Links / Contact Info</span>
+                  <button onClick={() => setForm((f) => ({ ...f, customLinks: [...f.customLinks, { name: '', url: '' }] }))}
+                    className="flex items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300 transition-colors">
+                    <Plus className="h-3 w-3" /> Add Link
+                  </button>
+                </div>
+                {form.customLinks.length > 0 && (
+                  <div className="space-y-3">
+                    {form.customLinks.map((link, i) => (
+                      <div key={i} className="flex items-center gap-3 relative group">
+                        <div className="flex-1 grid grid-cols-2 gap-3">
+                          <input className={input} value={link.name} placeholder="Label (e.g., LeetCode)"
+                            onChange={(e) => { const cl = [...form.customLinks]; cl[i] = { ...cl[i], name: e.target.value }; setForm((f) => ({ ...f, customLinks: cl })) }} />
+                          <input className={input} value={link.url} placeholder="URL"
+                            onChange={(e) => { const cl = [...form.customLinks]; cl[i] = { ...cl[i], url: e.target.value }; setForm((f) => ({ ...f, customLinks: cl })) }} />
+                        </div>
+                        <button onClick={() => setForm((f) => ({ ...f, customLinks: f.customLinks.filter((_, x) => x !== i) }))}
+                          className="text-muted-foreground hover:text-red-400 p-1 transition-colors">
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </SectionCard>
 
@@ -730,17 +777,24 @@ export default function ResumeBuilderPage() {
             <div className="relative mb-4">
               <ClipboardPaste className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
               <textarea rows={7} value={jd} onChange={(e) => setJd(e.target.value)}
-                placeholder="Paste the job description here…"
+                placeholder="Paste Job Description to check match, or leave blank for a general resume review…"
                 className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-600 transition-all resize-none placeholder:text-muted-foreground" />
             </div>
+
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Optional: Upload Resume (PDF) to check against instead of saved profile</label>
+              <input type="file" accept=".pdf" onChange={(e) => setAtsPdf(e.target.files?.[0] || null)}
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-600 transition-all file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-violet-500/10 file:text-violet-400 hover:file:bg-violet-500/20" />
+            </div>
+
             <div className="flex gap-3">
-              <button onClick={runAtsCheck} disabled={atsChecking || !jd.trim()}
+              <button onClick={runAtsCheck} disabled={atsChecking}
                 className="flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50 transition-colors">
                 {atsChecking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
                 {atsChecking ? 'Analysing…' : 'Check ATS Score'}
               </button>
               {atsResult && (
-                <button onClick={() => { setAtsResult(null); setJd('') }}
+                <button onClick={() => { setAtsResult(null); setJd(''); setAtsPdf(null) }}
                   className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
                   <RefreshCw className="h-4 w-4" /> Reset
                 </button>
